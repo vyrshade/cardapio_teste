@@ -1,0 +1,128 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userMerchantId() {
+      return request.auth.token.merchantId;
+    }
+
+    function userAccessLevel() {
+      return request.auth.token.accessLevel;
+    }
+
+    function isMerchantAdmin(merchantId) {
+      return isSignedIn() &&
+             userMerchantId() == merchantId &&
+             userAccessLevel() == 10 &&
+             request.auth.token.admin == true;
+    }
+
+    function isOwner() {
+      return isSignedIn() && request.resource.data.customer.uid == request.auth.uid;
+    }
+    
+    function isColaborator() {
+      // Implementar
+      return true;
+    }
+
+    function isSuperUser() {
+      return isSignedIn() &&
+             userAccessLevel() == 1000 &&
+             request.auth.token.admin == true;
+    }
+
+   
+    match /merchant/{merchantId} {
+     
+  		allow get: if isSignedIn() || isSuperUser(); 
+      allow write: if isMerchantAdmin(merchantId) || isSuperUser();
+      allow list: if isSuperUser();
+      
+      match /category/{categoryId} {
+        allow read: if isSignedIn();
+        allow write: if isMerchantAdmin(merchantId);
+      }
+
+      match /checkIn/{checkInId} {
+        allow read, write: if isSignedIn();
+      }
+
+      match /checkout/{checkoutId} {
+        allow read, write: if isSignedIn();
+      }
+
+      match /customer/{customerId} {
+        allow read, write: if isSignedIn();
+      }
+
+      match /help/{helpId} {
+        allow read, write: if isSignedIn();
+      }
+
+      match /item/{itemId} {
+        allow read: if isSignedIn();
+        allow write: if isMerchantAdmin(merchantId);
+      }
+
+      match /kds/{kdsId} {
+        allow read: if isSignedIn();
+        allow write: if isMerchantAdmin(merchantId);
+      }
+
+      match /option/{optionId} {
+        allow read: if isSignedIn();
+        allow write: if isMerchantAdmin(merchantId);
+      }
+           
+      match /order/{orderId} {
+        allow create, delete: if isMerchantAdmin(merchantId) || isOwner() || isColaborator();
+        allow update: if (isMerchantAdmin(merchantId) || isColaborator()) || (isOwner() && request.resource.data.customer.uid == resource.data.customer.uid);
+        allow read: if isMerchantAdmin(merchantId) || isOwner() || isColaborator();
+      }
+
+      match /order_status/{order_statusId} {	
+        allow read: if isSignedIn();
+        allow write: if isMerchantAdmin(merchantId);
+      }
+
+      match /payment/{paymentId} {
+        allow read: if isSignedIn() || isSuperUser();
+        allow write: if isMerchantAdmin(merchantId) || isSuperUser();
+      }
+
+      match /table/{tableId} {
+        allow read: if isSignedIn();
+        allow write: if isMerchantAdmin(merchantId);
+      }
+      
+      match /user/{userId} {
+        allow read: if isSignedIn();
+        allow write: if isMerchantAdmin(merchantId);
+      }
+     
+      match /event/{eventId} {
+        allow read, write: if isMerchantAdmin(merchantId);
+      }
+    }
+
+    match /payment/{paymentId} {
+    	allow create: if isSuperUser() || (isSignedIn() && request.resource.data.value == 0 && request.resource.data.description == 'Periodo de teste');
+      allow read, update, delete: if isSuperUser();
+    }
+   
+    match /event/{eventId} {
+      allow read, write: if isSuperUser();
+    }
+  
+    match /adm/{admId} {
+      allow read, write: if isSuperUser();
+    }
+  }
+}

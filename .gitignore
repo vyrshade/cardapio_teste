@@ -1,0 +1,22 @@
+node_modules/
+
+
+.env.development
+.env.production
+
+dist/
+
+
+#api
+api/node_modules
+
+# production
+api/build
+
+# misc
+api/.env.development
+api/.env.production
+
+api/npm-debug.log*
+api/yarn-debug.log*
+api/yarn-error.log*

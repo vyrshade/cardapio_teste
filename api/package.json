@@ -1,0 +1,37 @@
+{
+  "name": "functions",
+  "description": "API cardapio digital",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log",
+    "dev": "NODE_ENV=development node src/server.js",
+    "prod": "NODE_ENV=production node src/server.js",
+    "dev_windows": "powershell -Command \"$env:NODE_ENV='development'; node src/server.js\""
+  },
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.0.0",
+    "@google-cloud/logging": "^11.0.0",
+    "@google-cloud/scheduler": "^4.3.0",
+    "@google-cloud/tasks": "^4.0.0",
+    "date-fns": "^2.30.0",
+    "date-fns-tz": "^2.0.0",
+    "dotenv": "^16.4.5",
+    "firebase-admin": "^12.1.0",
+    "firebase-functions": "^6.1.2",
+    "googleapis": "^134.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^6.9.12"
+  },
+  "devDependencies": {
+    "firebase-functions-test": "^0.2.0",
+    "pm2": "^6.0.13"
+  },
+  "private": true
+}
