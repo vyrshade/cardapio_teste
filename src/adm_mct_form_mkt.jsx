@@ -38,7 +38,16 @@ const CnpjMask = React.forwardRef(function CnpjMask(props, ref) {
   return (
     <IMaskInput
       {...other}
-      mask='00.000.000/0000-00'
+      mask={[
+        { mask: '000.000.000-00' },
+        { mask: '00.000.000/0000-00' },
+      ]}
+      dispatch={(appended, dynamicMasked) => {
+        const digits = (dynamicMasked.value + appended).replace(/\D/g, '');
+        return digits.length > 11
+          ? dynamicMasked.compiledMasks[1]
+          : dynamicMasked.compiledMasks[0];
+      }}
       inputRef={ref}
       onAccept={(value) => onChange({ target: { name: props.name, value } })}
       overwrite
@@ -104,6 +113,29 @@ export default function MerchantFormMkt() {
     return resultado === parseInt(digitos.charAt(1));
   }
 
+  function validarCPF(cpf) {
+    cpf = cpf.replace(/[^\d]+/g, '');
+
+    if (!cpf || cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
+
+    let soma = 0;
+    for (let i = 0; i < 9; i++) soma += parseInt(cpf.charAt(i)) * (10 - i);
+    let resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+    if (resto !== parseInt(cpf.charAt(9))) return false;
+
+    soma = 0;
+    for (let i = 0; i < 10; i++) soma += parseInt(cpf.charAt(i)) * (11 - i);
+    resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+    return resto === parseInt(cpf.charAt(10));
+  }
+
+  function validarDocumento(doc) {
+    const digits = doc.replace(/[^\d]+/g, '');
+    return digits.length === 11 ? validarCPF(doc) : validarCNPJ(doc);
+  }
+
   const schema = z
     .object({
       name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres'),
@@ -115,9 +147,9 @@ export default function MerchantFormMkt() {
       confirmPassword: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
       cnpj: z
         .string()
-        .min(1, { message: 'CNPJ obrigatório' })
-        .refine((cnpj) => !cnpj || validarCNPJ(cnpj), {
-          message: 'CNPJ inválido',
+        .min(1, { message: 'CNPJ / CPF obrigatório' })
+        .refine((doc) => !doc || validarDocumento(doc), {
+          message: 'CNPJ / CPF inválido',
         }),
       phone: z.string().min(15, 'Celular inválido'),
       isMerchantAdmin: z.boolean(),
@@ -357,7 +389,7 @@ export default function MerchantFormMkt() {
                   {...field}
                   fullWidth
                   margin='dense'
-                  label='CNPJ'
+                  label='CNPJ / CPF'
                   size='small'
                   InputProps={{
                     inputComponent: CnpjMask
