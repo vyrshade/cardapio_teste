@@ -36,7 +36,16 @@ const CnpjMask = React.forwardRef(function CnpjMask(props, ref) {
   return (
     <IMaskInput
       {...other}
-      mask="00.000.000/0000-00"
+      mask={[
+        { mask: '000.000.000-00' },
+        { mask: '00.000.000/0000-00' },
+      ]}
+      dispatch={(appended, dynamicMasked) => {
+        const digits = (dynamicMasked.value + appended).replace(/\D/g, '');
+        return digits.length > 11
+          ? dynamicMasked.compiledMasks[1]
+          : dynamicMasked.compiledMasks[0];
+      }}
       inputRef={ref}
       onAccept={(value) => onChange({ target: { name: props.name, value } })}
       overwrite
@@ -141,7 +150,7 @@ export default function LoginChange() {
                       {...field}
                       required
                       fullWidth
-                      label="CNPJ"
+                      label="CNPJ / CPF"
                       size="small"
                       InputProps={{
                         inputComponent: CnpjMask,
